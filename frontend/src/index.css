@@ -1,0 +1,251 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ParkMe Design System - Modern parking marketplace theme */
+
+@layer base {
+  :root {
+    /* Core colors - Urban parking theme */
+    --background: 0 0% 100%;
+    --foreground: 213 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 213 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 15% 15%;
+
+    /* Primary - Modern teal for trust and reliability */
+    --primary: 195 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 195 85% 40%;
+    --primary-light: 195 85% 95%;
+
+    /* Secondary - Warm accent */
+    --secondary: 25 85% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 25 85% 55%;
+    --secondary-light: 25 85% 95%;
+
+    /* Neutral tones */
+    --muted: 210 25% 96%;
+    --muted-foreground: 213 15% 50%;
+
+    --accent: 210 25% 94%;
+    --accent-foreground: 213 15% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 213 15% 92%;
+    --input: 213 15% 96%;
+    --ring: 195 85% 45%;
+
+    --radius: 0.75rem;
+
+    /* Success state */
+    --success: 140 85% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 140 85% 95%;
+
+    /* Warning state */
+    --warning: 45 85% 60%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 45 85% 95%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(195 85% 45%), hsl(195 85% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(25 85% 60%), hsl(25 85% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(195 85% 45%) 0%, hsl(25 85% 60%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 25% 99%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(195 85% 45% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(195 85% 45% / 0.1), 0 2px 4px -1px hsl(195 85% 45% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(195 85% 45% / 0.1), 0 4px 6px -2px hsl(195 85% 45% / 0.05);
+    --shadow-hero: 0 20px 25px -5px hsl(195 85% 45% / 0.1), 0 10px 10px -5px hsl(195 85% 45% / 0.04);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Sidebar (keeping for component compatibility) */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark mode for ParkMe - maintain the same urban feel */
+    --background: 213 15% 8%;
+    --foreground: 0 0% 95%;
+    
+    --card: 213 15% 10%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 213 15% 10%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 195 85% 55%;
+    --primary-foreground: 213 15% 8%;
+    --primary-hover: 195 85% 50%;
+    --primary-light: 195 85% 15%;
+    
+    --secondary: 25 85% 65%;
+    --secondary-foreground: 213 15% 8%;
+    --secondary-hover: 25 85% 60%;
+    --secondary-light: 25 85% 15%;
+    
+    --muted: 213 15% 12%;
+    --muted-foreground: 213 15% 60%;
+    
+    --accent: 213 15% 14%;
+    --accent-foreground: 0 0% 95%;
+    
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 95%;
+    
+    --border: 213 15% 18%;
+    --input: 213 15% 14%;
+    --ring: 195 85% 55%;
+    
+    --success: 140 85% 50%;
+    --success-light: 140 85% 15%;
+    
+    --warning: 45 85% 65%;
+    --warning-light: 45 85% 15%;
+
+    /* Dark sidebar */
+    --sidebar-background: 213 15% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 195 85% 55%;
+    --sidebar-primary-foreground: 213 15% 8%;
+    --sidebar-accent: 213 15% 14%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 213 15% 18%;
+    --sidebar-ring: 195 85% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Custom scrollbar for a polished look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer components {
+  /* Gradient utilities using design system */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  /* Shadow utilities */
+  .shadow-custom-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .shadow-custom-md {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-custom-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .shadow-hero {
+    box-shadow: var(--shadow-hero);
+  }
+
+  /* Transition utilities */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-fast {
+    transition: var(--transition-fast);
+  }
+
+  /* Custom animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
