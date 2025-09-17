@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +23,7 @@ interface SearchData {
 }
 
 const SearchBar = ({ variant = "default", className, onSearch }: SearchBarProps) => {
+  const navigate = useNavigate();
   const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
@@ -34,8 +36,18 @@ const SearchBar = ({ variant = "default", className, onSearch }: SearchBarProps)
       endDate,
       vehicleType,
     };
+    
+    // If onSearch is provided, use it (for custom handling)
     onSearch?.(searchData);
-    console.log("Search data:", searchData);
+    
+    // Otherwise, navigate to search page with params
+    if (!onSearch) {
+      const params = new URLSearchParams();
+      if (location) params.set('region', location);
+      if (vehicleType) params.set('vehicle_type', vehicleType);
+      
+      navigate(`/search?${params.toString()}`);
+    }
   };
 
   const isHero = variant === "hero";

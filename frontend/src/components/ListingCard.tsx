@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Clock, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ListingCardProps {
   id: string;
@@ -36,15 +37,15 @@ const ListingCard = ({
   features = [],
   className
 }: ListingCardProps) => {
+  const navigate = useNavigate();
+  
   const handleCardClick = () => {
-    // TODO: Navigate to listing detail
-    console.log("Navigate to listing:", id);
+    navigate(`/listing/${id}`);
   };
 
   const handleBookClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Open booking modal or navigate to booking
-    console.log("Book listing:", id);
+    navigate(`/listing/${id}`);
   };
 
   return (

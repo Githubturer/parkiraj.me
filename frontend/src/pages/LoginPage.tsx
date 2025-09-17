@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Car, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { login } = useAuthContext();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,12 +21,13 @@ const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // TODO: Implement actual login logic
-    console.log("Login attempt:", { email, password });
+    const result = await login({ username: email, password });
     
-    setTimeout(() => {
+    if (result.success) {
+      navigate('/dashboard');
+    }
+    
       setIsLoading(false);
-    }, 1000);
   };
 
   return (

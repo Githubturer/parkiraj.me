@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Car, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+  const { register } = useAuthContext();
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -29,25 +34,37 @@ const RegisterPage = () => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      // TODO: Show error toast
-      console.error("Passwords don't match");
+      toast({
+        title: "Greška",
+        description: "Lozinke se ne podudaraju",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!agreeToTerms) {
-      // TODO: Show error toast
-      console.error("Please agree to terms");
+      toast({
+        title: "Greška",
+        description: "Molimo prihvatite uvjete korištenja",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsLoading(true);
     
-    // TODO: Implement actual registration logic
-    console.log("Registration attempt:", formData);
+    const result = await register({
+      email: formData.email,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      password: formData.password,
+    });
     
-    setTimeout(() => {
+    if (result.success) {
+      navigate('/dashboard');
+    }
+    
       setIsLoading(false);
-    }, 1000);
   };
 
   return (

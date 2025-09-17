@@ -2,12 +2,16 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Car, Menu, User } from "lucide-react";
 import { useState } from "react";
+import { useAuthContext } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuthContext();
   
-  // TODO: Replace with actual auth state
-  const isLoggedIn = false;
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-card/80 backdrop-blur-md border-b border-border shadow-custom-sm">
@@ -39,15 +43,16 @@ const Navbar = () => {
 
           {/* User Actions */}
           <div className="hidden md:flex items-center space-x-3">
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <>
                 <Link to="/dashboard">
                   <Button variant="ghost" size="sm">
                     Kontrolna ploča
                   </Button>
                 </Link>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <User className="h-4 w-4" />
+                  {user?.first_name}
                 </Button>
               </>
             ) : (
@@ -95,16 +100,16 @@ const Navbar = () => {
               </Link>
               
               <div className="pt-3 border-t border-border space-y-2">
-                {isLoggedIn ? (
+                {isAuthenticated ? (
                   <>
                     <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="ghost" size="sm" className="w-full justify-start">
                         Kontrolna ploča
                       </Button>
                     </Link>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleLogout}>
                       <User className="h-4 w-4 mr-2" />
-                      Profil
+                      Odjava ({user?.first_name})
                     </Button>
                   </>
                 ) : (
