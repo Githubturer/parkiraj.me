@@ -191,3 +191,5 @@ export type SearchFilters = {
   skip?: number;
   limit?: number;
 };
+
+export { BaseHttpClient }
