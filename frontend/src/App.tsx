@@ -10,6 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import SearchPage from "./pages/SearchPage";
 import DashboardPage from "./pages/DashboardPage";
 import ListingDetailPage from "./pages/ListingDetailPage";
+import CreateListingPage from "./pages/CreateListingPage";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/search" element={<SearchPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/listing/:id" element={<ListingDetailPage />} />
+              <Route path="/create-listing" element={<CreateListingPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

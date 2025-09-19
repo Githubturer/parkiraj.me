@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useListings } from "@/hooks/useListings";
 import { useBookings } from "@/hooks/useBookings";
+import BookingCard from "@/components/BookingCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ListingCard from "@/components/ListingCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
 import { 
   Car, 
   Calendar, 
@@ -134,10 +136,12 @@ const DashboardPage = () => {
           <TabsContent value="listings" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Moji oglasi</h2>
-              <Button className="gradient-primary border-0 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Dodaj novi oglas
-              </Button>
+              <Link to="/create-listing">
+                <Button className="gradient-primary border-0 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Dodaj novi oglas
+                </Button>
+              </Link>
             </div>
 
             {listingsLoading ? (
@@ -180,10 +184,12 @@ const DashboardPage = () => {
                   <p className="text-muted-foreground mb-4">
                     Počnite zarađivati iznajmljivanjem svojeg parkirnog mjesta
                   </p>
-                  <Button className="gradient-primary border-0 text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Dodaj prvi oglas
-                  </Button>
+                  <Link to="/create-listing">
+                    <Button className="gradient-primary border-0 text-white">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Dodaj prvi oglas
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             )}
@@ -194,38 +200,38 @@ const DashboardPage = () => {
             <h2 className="text-2xl font-bold">Moje rezervacije</h2>
 
             {bookingsLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, index) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(4)].map((_, index) => (
                   <Card key={index}>
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-48" />
-                          <Skeleton className="h-4 w-32" />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Skeleton className="h-6 w-48" />
+                          <Skeleton className="h-6 w-20" />
                         </div>
-                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-16 w-full" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-8 w-24" />
+                          <Skeleton className="h-8 w-24" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : bookings.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {bookings.map((booking) => (
-                  <Card key={booking.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">Rezervacija #{booking.id}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm font-medium">${booking.total_price}</p>
-                        </div>
-                        {getStatusBadge(booking.status)}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    type="booking"
+                    onMessage={(bookingId) => {
+                      // TODO: Implement chat functionality
+                      console.log('Open chat for booking:', bookingId);
+                    }}
+                  />
                 ))}
               </div>
             ) : (
@@ -246,18 +252,20 @@ const DashboardPage = () => {
             <h2 className="text-2xl font-bold">Zahtjevi za najam</h2>
 
             {bookingsLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, index) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(4)].map((_, index) => (
                   <Card key={index}>
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-48" />
-                          <Skeleton className="h-4 w-32" />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Skeleton className="h-6 w-48" />
+                          <Skeleton className="h-6 w-20" />
                         </div>
-                        <div className="flex space-x-2">
-                          <Skeleton className="h-8 w-20" />
-                          <Skeleton className="h-8 w-20" />
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-16 w-full" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-8 w-24" />
+                          <Skeleton className="h-8 w-24" />
                         </div>
                       </div>
                     </CardContent>
@@ -265,48 +273,19 @@ const DashboardPage = () => {
                 ))}
               </div>
             ) : rents.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {rents.map((rent) => (
-                  <Card key={rent.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">Zahtjev #{rent.id}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(rent.start_date).toLocaleDateString()} - {new Date(rent.end_date).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm font-medium">${rent.total_price}</p>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          {getStatusBadge(rent.status)}
-                          {rent.status === 'pending' && (
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-success border-success hover:bg-success hover:text-white"
-                                onClick={() => handleBookingStatusUpdate(rent.id, 'confirmed')}
-                                disabled={updatingBooking === rent.id}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Potvrdi
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-destructive border-destructive hover:bg-destructive hover:text-white"
-                                onClick={() => handleBookingStatusUpdate(rent.id, 'declined')}
-                                disabled={updatingBooking === rent.id}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Odbij
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <BookingCard
+                    key={rent.id}
+                    booking={rent}
+                    type="rent"
+                    onStatusUpdate={handleBookingStatusUpdate}
+                    onMessage={(bookingId) => {
+                      // TODO: Implement chat functionality
+                      console.log('Open chat for booking:', bookingId);
+                    }}
+                    isUpdating={updatingBooking === rent.id}
+                  />
                 ))}
               </div>
             ) : (
