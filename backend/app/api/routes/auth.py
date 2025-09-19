@@ -7,6 +7,10 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.models.user import User, UserCreate, UserRead
 from datetime import timedelta
 from app.core.config import settings
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -30,6 +34,9 @@ async def register_user(
     
     # Hash password and create user
     hashed_password = get_password_hash(user_data.password)
+    logger.info(f"DEBUG: Original password: {user_data.password}")
+    logger.info(f"DEBUG: Hashed password: {hashed_password}")
+    
     db_user = User(
         email=user_data.email,
         first_name=user_data.first_name,
@@ -42,6 +49,7 @@ async def register_user(
     await session.commit()
     await session.refresh(db_user)
     
+    logger.info(f"DEBUG: User created with ID: {db_user.id}")
     return db_user
 
 
@@ -51,12 +59,29 @@ async def login_for_access_token(
     session: AsyncSession = Depends(get_session)
 ):
     """Login and get access token."""
+    logger.info(f"DEBUG: Login attempt for email: {form_data.username}")
+    logger.info(f"DEBUG: Login password: {form_data.password}")
+    
     # Find user by email (username field in form)
     statement = select(User).where(User.email == form_data.username)
     result = await session.exec(statement)
     user = result.first()
     
-    if not user or not verify_password(form_data.password, user.password):
+    if not user:
+        logger.info("DEBUG: User not found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    logger.info(f"DEBUG: User found: {user.email}")
+    logger.info(f"DEBUG: Stored password hash: {user.password}")
+    
+    password_valid = verify_password(form_data.password, user.password)
+    logger.info(f"DEBUG: Password verification result: {password_valid}")
+    
+    if not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -74,6 +99,7 @@ async def login_for_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
+    logger.info("DEBUG: Login successful, token created")
     return {
         "access_token": access_token,
         "token_type": "bearer"

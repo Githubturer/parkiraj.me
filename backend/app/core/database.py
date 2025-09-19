@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 from .config import settings
 
 # Async engine for database operations
@@ -10,17 +10,10 @@ async_engine = create_async_engine(
     future=True
 )
 
-# Async session maker
-AsyncSessionLocal = sessionmaker(
-    async_engine, 
-    class_=AsyncSession, 
-    expire_on_commit=False
-)
-
 
 async def get_session() -> AsyncSession:
     """Dependency to get database session."""
-    async with AsyncSessionLocal() as session:
+    async with AsyncSession(async_engine) as session:
         yield session
 
 
