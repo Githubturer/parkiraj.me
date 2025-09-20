@@ -10,6 +10,7 @@ class ListingBase(SQLModel):
     title: str
     description: Optional[str] = None
     address: str
+    place: str
     city: str
     state: str
     country: str
@@ -17,6 +18,7 @@ class ListingBase(SQLModel):
     price_per_day: Decimal = Field(max_digits=10, decimal_places=2)
     price_per_hour: Decimal = Field(max_digits=10, decimal_places=2)
     vehicle_types: List[str] = Field(sa_column=Column(JSON))
+    images: List[str] = Field(sa_column=Column(JSON), default_factory=list)
     is_long_term: bool = Field(default=False)
     is_short_term: bool = Field(default=True)
     is_available: bool = Field(default=True)
@@ -44,6 +46,7 @@ class ListingUpdate(SQLModel):
     title: Optional[str] = None
     description: Optional[str] = None
     address: Optional[str] = None
+    place: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
     country: Optional[str] = None
@@ -51,6 +54,7 @@ class ListingUpdate(SQLModel):
     price_per_day: Optional[Decimal] = None
     price_per_hour: Optional[Decimal] = None
     vehicle_types: Optional[List[str]] = None
+    images: Optional[List[str]] = None
     is_long_term: Optional[bool] = None
     is_short_term: Optional[bool] = None
     is_available: Optional[bool] = None

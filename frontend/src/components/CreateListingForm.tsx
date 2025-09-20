@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,20 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useListings } from "@/hooks/useListings";
 import { useAuthContext } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { MapPin, Car, Clock, DollarSign, X } from "lucide-react";
+import { MapPin, Car, Clock, Euro, X, Upload, Image as ImageIcon } from "lucide-react";
 
 const createListingSchema = z.object({
   title: z.string().min(5, "Naslov mora imati najmanje 5 znakova"),
   description: z.string().optional(),
   address: z.string().min(5, "Adresa mora imati najmanje 5 znakova"),
-  city: z.string().min(2, "Grad mora imati najmanje 2 znaka"),
-  state: z.string().min(2, "Država mora imati najmanje 2 znaka"),
+  place: z.string().min(2, "Mjesto mora imati najmanje 2 znaka"),
+  city: z.string().min(2, "Grad mora imati najmanje 2 znaka"),    
+  state: z.string().min(2, "Županija mora imati najmanje 2 znaka"),
   country: z.string().min(2, "Zemlja mora imati najmanje 2 znaka"),
   zip_code: z.string().min(3, "Poštanski broj mora imati najmanje 3 znaka"),
   price_per_day: z.number().min(1, "Cijena po danu mora biti veća od 0"),
@@ -51,9 +51,19 @@ interface CreateListingFormProps {
 const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
   const navigate = useNavigate();
   const { getToken } = useAuthContext();
-  const { createListing } = useListings();
+  const { createListing, fetchListings } = useListings();
   const [selectedVehicleTypes, setSelectedVehicleTypes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize selectedVehicleTypes from form default values
+  useEffect(() => {
+    const formVehicleTypes = form.getValues("vehicle_types");
+    if (Array.isArray(formVehicleTypes)) {
+      setSelectedVehicleTypes(formVehicleTypes);
+    }
+  }, []);
 
   const form = useForm<CreateListingFormData>({
     resolver: zodResolver(createListingSchema),
@@ -61,6 +71,7 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
       title: "",
       description: "",
       address: "",
+      place: "",
       city: "",
       state: "",
       country: "Hrvatska",
@@ -73,18 +84,57 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
     },
   });
 
+
   const handleVehicleTypeToggle = (vehicleType: string) => {
     const updatedTypes = selectedVehicleTypes.includes(vehicleType)
       ? selectedVehicleTypes.filter(type => type !== vehicleType)
       : [...selectedVehicleTypes, vehicleType];
     
     setSelectedVehicleTypes(updatedTypes);
-    form.setValue("vehicle_types", updatedTypes);
+    form.setValue("vehicle_types", updatedTypes, { shouldValidate: true });
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast({
+            title: "Greška",
+            description: `Slika ${file.name} je prevelika. Maksimalna veličina je 5MB.`,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          console.log('Image uploaded:', file.name, 'Size:', file.size, 'Type:', file.type);
+          setImages(prev => [...prev, result]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: CreateListingFormData) => {
+    console.log("=== FORM SUBMIT STARTED ===");
+    console.log("Form submitted with data:", data);
+    console.log("Form validation errors:", form.formState.errors);
+    
     const token = getToken();
+    console.log("Token retrieved:", token ? "EXISTS" : "NULL");
+    
     if (!token) {
+      console.log("No token found - redirecting to login");
       toast({
         title: "Greška",
         description: "Molimo prijavite se za dodavanje oglasa",
@@ -94,23 +144,50 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
       return;
     }
 
+    console.log("Token found, starting submission");
     setIsSubmitting(true);
     
-    const result = await createListing(token, {
-      ...data,
-      vehicle_types: selectedVehicleTypes,
-    });
+    try {
+      console.log("Calling createListing with token and data...");
+      const listingData = {
+        ...data,
+        price_per_day: Number(data.price_per_day),
+        price_per_hour: Number(data.price_per_hour),
+        images: images, // Dodajmo slike u podatke
+      };
+      const result = await createListing(token, listingData);
+      console.log("Create listing result:", result);
 
-    if (result.success) {
+      if (result.success) {
+        console.log("Listing created successfully!");
+        toast({
+          title: "Uspješno objavljeno",
+          description: "Vaš oglas je uspješno objavljen!",
+        });
+        onSuccess?.();
+        // Refresh listings before redirect
+        await fetchListings();
+        navigate('/dashboard');
+      } else {
+        console.log("Create listing failed:", result.error);
+        toast({
+          title: "Greška",
+          description: result.error || "Greška pri objavljivanju oglasa",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error in onSubmit:", error);
+      console.error("Error details:", error);
       toast({
-        title: "Uspješno dodano",
-        description: "Vaš oglas je uspješno objavljen!",
+        title: "Greška",
+        description: "Neočekivana greška pri objavljivanju oglasa",
+        variant: "destructive",
       });
-      onSuccess?.();
-      navigate('/dashboard');
+    } finally {
+      console.log("=== FORM SUBMIT FINISHED ===");
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   return (
@@ -126,7 +203,12 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={(e) => {
+            console.log("Form submit event triggered");
+            console.log("Form errors:", form.formState.errors);
+            console.log("Form values:", form.getValues());
+            form.handleSubmit(onSubmit)(e);
+          }} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Osnovne informacije</h3>
@@ -185,6 +267,19 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
+                  name="place"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Naselje</FormLabel>
+                      <FormControl>
+                        <Input placeholder="npr. Trnje" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="city"
                   render={({ field }) => (
                     <FormItem>
@@ -196,7 +291,6 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="zip_code"
@@ -218,9 +312,9 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
                   name="state"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Država/Regija</FormLabel>
+                      <FormLabel>Županija</FormLabel>
                       <FormControl>
-                        <Input placeholder="Zagreb" {...field} />
+                        <Input placeholder="Grad Zagreb" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -246,7 +340,7 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
             {/* Pricing */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center">
-                <DollarSign className="h-5 w-5 mr-2 text-primary" />
+                <Euro className="h-5 w-5 mr-2 text-primary" />
                 Cijena
               </h3>
               
@@ -304,42 +398,32 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {vehicleTypeOptions.map((option) => (
-                  <div
+                  <button
                     key={option.value}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    type="button"
+                    className={`p-3 border rounded-lg transition-colors text-left ${
                       selectedVehicleTypes.includes(option.value)
-                        ? 'border-primary bg-primary/10'
+                        ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border hover:border-primary/50'
                     }`}
                     onClick={() => handleVehicleTypeToggle(option.value)}
                   >
                     <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={selectedVehicleTypes.includes(option.value)}
-                        onChange={() => handleVehicleTypeToggle(option.value)}
-                      />
+                      <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
+                        selectedVehicleTypes.includes(option.value)
+                          ? 'border-primary bg-primary'
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedVehicleTypes.includes(option.value) && (
+                          <div className="w-2 h-2 bg-white rounded-sm" />
+                        )}
+                      </div>
                       <span className="text-sm font-medium">{option.label}</span>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
-              {selectedVehicleTypes.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedVehicleTypes.map((type) => {
-                    const option = vehicleTypeOptions.find(opt => opt.value === type);
-                    return (
-                      <Badge key={type} variant="secondary" className="flex items-center gap-1">
-                        {option?.label}
-                        <X 
-                          className="h-3 w-3 cursor-pointer" 
-                          onClick={() => handleVehicleTypeToggle(type)}
-                        />
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
               
               {form.formState.errors.vehicle_types && (
                 <p className="text-sm text-destructive">
@@ -362,9 +446,11 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
-                        <Checkbox
+                        <input
+                          type="checkbox"
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
@@ -383,9 +469,11 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
-                        <Checkbox
+                        <input
+                          type="checkbox"
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
@@ -397,6 +485,58 @@ const CreateListingForm = ({ onSuccess, onCancel }: CreateListingFormProps) => {
                     </FormItem>
                   )}
                 />
+              </div>
+            </div>
+
+            {/* Images */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center">
+                <ImageIcon className="h-5 w-5 mr-2 text-primary" />
+                Slike
+              </h3>
+              
+              <div className="space-y-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Dodaj slike
+                </Button>
+                
+                {images.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image}
+                          alt={`Upload ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

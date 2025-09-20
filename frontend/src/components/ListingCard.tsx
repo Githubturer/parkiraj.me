@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Clock, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatPriceWithPeriod } from "@/lib/utils";
 
 interface ListingCardProps {
   id: string;
@@ -72,12 +73,12 @@ const ListingCard = ({
           {isShortTerm && (
             <Badge variant="secondary" className="bg-white/90 text-primary-foreground">
               <Clock className="w-3 h-3 mr-1" />
-              Hourly
+              Po satu
             </Badge>
           )}
           {isLongTerm && (
             <Badge variant="secondary" className="bg-white/90 text-primary-foreground">
-              Long-term
+              Dugoročno
             </Badge>
           )}
         </div>
@@ -87,7 +88,7 @@ const ListingCard = ({
           <div className="absolute top-3 right-3">
             <Badge variant="secondary" className="bg-success/90 text-white">
               <Shield className="w-3 h-3 mr-1" />
-              Secure
+              Sigurno
             </Badge>
           </div>
         )}
@@ -131,10 +132,10 @@ const ListingCard = ({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="text-lg font-bold text-primary">
-              ${pricePerHour}/hr
+              {formatPriceWithPeriod(pricePerHour, 'hour')}
             </div>
             <div className="text-sm text-muted-foreground">
-              ${pricePerDay}/day
+              {formatPriceWithPeriod(pricePerDay, 'day')}
             </div>
           </div>
           
@@ -143,7 +144,7 @@ const ListingCard = ({
             onClick={handleBookClick}
             className="gradient-primary border-0 text-white hover:opacity-90 transition-fast"
           >
-            Book Now
+            Rezerviraj
           </Button>
         </div>
 

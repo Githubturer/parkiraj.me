@@ -11,14 +11,14 @@ from decimal import Decimal
 router = APIRouter()
 
 
-@router.post("/", response_model=ListingRead)
+@router.post("/", response_model=ListingRead, status_code=status.HTTP_201_CREATED)
 async def create_listing(
     listing_data: ListingCreate,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
     """Create a new listing."""
-    db_listing = Listing(**listing_data.dict(), owner_id=current_user.id)
+    db_listing = Listing(**listing_data.model_dump(), owner_id=current_user.id)
     session.add(db_listing)
     await session.commit()
     await session.refresh(db_listing)

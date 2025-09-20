@@ -19,6 +19,11 @@ export class ListingService extends BaseHttpClient {
   }
   
   async createListing(token: string, listingData: CreateListingData): Promise<Listing> {
+    console.log("=== LISTING SERVICE CREATE ===");
+    console.log("Token:", token ? "EXISTS" : "NULL");
+    console.log("Listing data:", listingData);
+    console.log("API URL:", this.baseUrl);
+    
     const response = await this.authenticatedRequest<Listing>(
       '/listings/',
       token,
@@ -28,6 +33,7 @@ export class ListingService extends BaseHttpClient {
       }
     );
     
+    console.log("API Response:", response);
     return ListingSchema.parse(response);
   }
   

@@ -34,6 +34,9 @@ export abstract class BaseHttpClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    console.log("=== BASE HTTP CLIENT REQUEST ===");
+    console.log("URL:", url);
+    console.log("Options:", options);
     
     try {
       const response = await fetch(url, {
@@ -44,16 +47,24 @@ export abstract class BaseHttpClient {
         },
       });
       
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Response error text:", errorText);
         throw new ApiError(
           `HTTP ${response.status}: ${response.statusText}`,
           response.status,
-          await response.text()
+          errorText
         );
       }
       
-      return await response.json();
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
+      return responseData;
     } catch (error) {
+      console.error("Request error:", error);
       if (error instanceof ApiError) {
         throw error;
       }
@@ -66,6 +77,14 @@ export abstract class BaseHttpClient {
     token: string,
     options: RequestInit = {}
   ): Promise<T> {
+    console.log("=== AUTHENTICATED REQUEST ===");
+    console.log("Endpoint:", endpoint);
+    console.log("Token:", token ? "EXISTS" : "NULL");
+    console.log("Options:", options);
+    
+    const fullUrl = `${this.baseUrl}${endpoint}`;
+    console.log("Full URL:", fullUrl);
+    
     return this.request<T>(endpoint, {
       ...options,
       headers: {
@@ -104,13 +123,15 @@ export const ListingSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   address: z.string(),
+  place: z.string(),
   city: z.string(),
   state: z.string(),
   country: z.string(),
   zip_code: z.string(),
-  price_per_day: z.number(),
-  price_per_hour: z.number(),
+  price_per_day: z.union([z.number(), z.string()]).transform((val) => typeof val === 'string' ? parseFloat(val) : val),
+  price_per_hour: z.union([z.number(), z.string()]).transform((val) => typeof val === 'string' ? parseFloat(val) : val),
   vehicle_types: z.array(z.string()),
+  images: z.array(z.string()).default([]),
   is_long_term: z.boolean(),
   is_short_term: z.boolean(),
   is_available: z.boolean(),
@@ -123,7 +144,7 @@ export const BookingSchema = z.object({
   listing_id: z.number(),
   start_date: z.string(),
   end_date: z.string(),
-  total_price: z.number(),
+  total_price: z.union([z.number(), z.string()]).transform((val) => typeof val === 'string' ? parseFloat(val) : val),
   status: z.enum(['pending', 'confirmed', 'declined', 'completed']),
   created_at: z.string(),
 });
@@ -191,5 +212,3 @@ export type SearchFilters = {
   skip?: number;
   limit?: number;
 };
-
-export { BaseHttpClient }

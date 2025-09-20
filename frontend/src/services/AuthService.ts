@@ -17,11 +17,22 @@ export class AuthService extends BaseHttpClient {
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
     
-    return this.request('/token', {
+    const url = `${this.baseUrl}/token`;
+    
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {}, // Don't include JSON headers for FormData
-      body: formData,
+      body: formData, // Don't set Content-Type header for FormData
     });
+    
+    if (!response.ok) {
+      throw new ApiError(
+        `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        await response.text()
+      );
+    }
+    
+    return await response.json();
   }
   
   async register(userData: RegisterData): Promise<User> {

@@ -1,12 +1,37 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Car, Menu, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { useState } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuthContext();
+  
+  // Add error boundary for auth context
+  let authContext;
+  try {
+    authContext = useAuthContext();
+  } catch (error) {
+    console.error('AuthContext error:', error);
+    // Return a fallback navbar if auth context is not available
+    return (
+      <nav className="sticky top-0 z-50 w-full bg-card/80 backdrop-blur-md border-b border-border shadow-custom-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+          <Link to="/" className="flex items-center space-x-2">
+            <img src="/logo.svg" alt="Parkiraj.me" className="h-6 w-6 rounded-md" />
+            <span className="text-xl font-bold">Parkiraj.me</span>
+          </Link>
+            <div className="text-sm text-muted-foreground">
+              Loading...
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+  
+  const { user, isAuthenticated, logout } = authContext;
   
   const handleLogout = () => {
     logout();
@@ -19,9 +44,7 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 transition-smooth hover:opacity-80">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <Car className="h-5 w-5 text-white" />
-            </div>
+            <img src="/logo.svg" alt="Parkiraj.me" className="h-11 w-12 rounded-md" />
             <span className="text-xl font-bold text-foreground">Parkiraj.me</span>
           </Link>
 

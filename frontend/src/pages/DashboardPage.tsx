@@ -169,6 +169,7 @@ const DashboardPage = () => {
                     pricePerDay={listing.price_per_day}
                     rating={4.5}
                     reviewCount={12}
+                    imageUrl={listing.images && listing.images.length > 0 ? listing.images[0] : undefined}
                     vehicleTypes={listing.vehicle_types}
                     isLongTerm={listing.is_long_term}
                     isShortTerm={listing.is_short_term}

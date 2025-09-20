@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { 
   MapPin, 
@@ -19,10 +20,13 @@ import {
   Car, 
   Calendar as CalendarIcon,
   ArrowLeft,
-  MessageCircle
+  MessageCircle,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice, formatPriceWithPeriod } from "@/lib/utils";
 
 const ListingDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +41,29 @@ const ListingDetailPage = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [isBooking, setIsBooking] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+  const openImageModal = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  const nextImage = () => {
+    if (listing?.images) {
+      setSelectedImageIndex((prev) => 
+        prev === listing.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (listing?.images) {
+      setSelectedImageIndex((prev) => 
+        prev === 0 ? listing.images.length - 1 : prev - 1
+      );
+    }
+  };
 
   const handleBooking = async () => {
     if (!user) {
@@ -150,9 +177,44 @@ const ListingDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Image Placeholder */}
-            <div className="h-64 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <MapPin className="h-16 w-16 text-white/80" />
+            {/* Images */}
+            <div className="space-y-4">
+              {listing.images && listing.images.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {listing.images.map((image, index) => (
+                    <div 
+                      key={index} 
+                      className="h-64 rounded-lg overflow-hidden cursor-pointer group relative"
+                      onClick={() => openImageModal(index)}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`${listing.title} - Slika ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onLoad={(e) => {
+                          console.log('Thumbnail loaded:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                        }}
+                        onError={(e) => {
+                          console.error('Thumbnail failed to load:', e);
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="bg-white/90 rounded-full p-2">
+                            <svg className="h-6 w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-64 bg-gradient-primary rounded-lg flex items-center justify-center">
+                  <MapPin className="h-16 w-16 text-white/80" />
+                </div>
+              )}
             </div>
 
             {/* Listing Info */}
@@ -179,10 +241,10 @@ const ListingDetailPage = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">
-                      ${listing.price_per_hour}/sat
+                      {formatPriceWithPeriod(listing.price_per_hour, 'hour')}
                     </div>
                     <div className="text-lg text-muted-foreground">
-                      ${listing.price_per_day}/dan
+                      {formatPriceWithPeriod(listing.price_per_day, 'day')}
                     </div>
                   </div>
                 </div>
@@ -285,13 +347,13 @@ const ListingDetailPage = () => {
                 {startDate && endDate && totalDays > 0 && (
                   <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
                     <div className="flex justify-between text-sm">
-                      <span>${listing.price_per_day} × {totalDays} dana</span>
-                      <span>${totalPrice}</span>
+                      <span>{formatPrice(listing.price_per_day)} × {totalDays} dana</span>
+                      <span>{formatPrice(totalPrice)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-semibold">
                       <span>Ukupno</span>
-                      <span>${totalPrice}</span>
+                      <span>{formatPrice(totalPrice)}</span>
                     </div>
                   </div>
                 )}
@@ -317,8 +379,79 @@ const ListingDetailPage = () => {
             </Card>
           </div>
         </div>
+
+  {/* Image Modal */}
+  </div>
+  {listing?.images && listing.images.length > 0 && (
+    <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+      <DialogContent className="max-w-[100vw] max-h-[100vh] w-[100vw] h-[100vh] p-0 bg-black/95 border-none">
+        <div className="relative w-full h-full flex items-center justify-center">
+          {/* Close Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+
+        {/* Previous Button */}
+        {listing.images.length > 1 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full"
+            onClick={prevImage}
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </Button>
+        )}
+
+        {/* Next Button */}
+        {listing.images.length > 1 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full"
+            onClick={nextImage}
+          >
+            <ChevronRight className="h-8 w-8" />
+          </Button>
+        )}
+
+        {/* Image Container */}
+        <div className="w-full h-full flex items-center justify-center p-16 box-border">
+          <img
+            src={listing.images[selectedImageIndex]}
+            alt={`${listing.title} - Slika ${selectedImageIndex + 1}`}
+            className="max-w-full max-h-full object-contain"
+            style={{ 
+              maxWidth: 'calc(100vw - 8rem)',
+              maxHeight: 'calc(100vh - 8rem)',
+              width: 'auto',
+              height: 'auto'
+            }}
+            onLoad={(e) => {
+              console.log('Full image loaded:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+            }}
+            onError={(e) => {
+              console.error('Full image failed to load:', e);
+            }}
+          />
+        </div>
+
+        {/* Image Counter */}
+        {listing.images.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium z-20">
+            {selectedImageIndex + 1} / {listing.images.length}
+          </div>
+        )}
       </div>
-    </div>
+    </DialogContent>
+  </Dialog>
+)}
+  </div>
   );
 };
 

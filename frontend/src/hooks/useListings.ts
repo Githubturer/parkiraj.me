@@ -35,27 +35,32 @@ export const useListings = (initialFilters: SearchFilters = {}) => {
   }, [initialFilters]);
   
   const createListing = useCallback(async (token: string, listingData: CreateListingData) => {
+    console.log("=== USE LISTINGS CREATE ===");
+    console.log("Token:", token ? "EXISTS" : "NULL");
+    console.log("Listing data:", listingData);
+    
     setIsLoading(true);
     try {
+      console.log("Calling listingService.createListing...");
       const newListing = await listingService.createListing(token, listingData);
+      console.log("Listing service returned:", newListing);
+      
       setListings(prev => [newListing, ...prev]);
       
-      toast({
-        title: "Uspješno dodano",
-        description: "Vaš oglas je uspješno objavljen!",
-      });
-      
+      console.log("Returning success result");
       return { success: true, listing: newListing };
     } catch (error) {
+      console.error("Error in useListings createListing:", error);
+      console.error("Error type:", typeof error);
+      console.error("Error constructor:", error?.constructor?.name);
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
+      
       const errorMessage = error instanceof ApiError 
         ? 'Greška pri stvaranju oglasa' 
         : 'Neočekivana greška';
       
-      toast({
-        title: "Greška",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.log("Error message to show:", errorMessage);
       
       return { success: false, error: errorMessage };
     } finally {
@@ -130,7 +135,7 @@ export const useListings = (initialFilters: SearchFilters = {}) => {
   // Initialize listings
   useEffect(() => {
     fetchListings();
-  }, [fetchListings]);
+  }, []); // Remove fetchListings dependency to prevent infinite loop
   
   return {
     listings,
